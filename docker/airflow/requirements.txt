@@ -1,0 +1,6 @@
+requests
+beautifulsoup4
+kafka-python
+pyspark
+boto3
+minio
