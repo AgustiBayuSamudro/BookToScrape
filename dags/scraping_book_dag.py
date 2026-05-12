@@ -6,7 +6,7 @@ import sys
 sys.path.append('/opt/airflow/scripts')
 
 def trigger_producer():
-    from scraper.producer import run_producer
+    from scraper.customer_producer import run_producer
     run_producer()
 
 with DAG(

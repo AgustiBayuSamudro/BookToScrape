@@ -157,7 +157,30 @@ services:
       resources:
         limits:
           memory: 1G
-
+  
+  spark-consumer:
+    build:
+      context: ./docker/spark
+    container_name: spark-consumer
+    user: root
+    environment:
+      - SPARK_MODE=client
+    volumes:
+      - /home/agusti/BookToScrape/scripts:/opt/spark/scripts
+      - spark-ivy-cache:/tmp/ivy_cache
+    command: >
+      spark-submit
+        --master spark://spark-master:7077
+        --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.0.jar,/opt/spark/jars/kafka-clients-3.4.1.jar,/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.0.jar,/opt/spark/jars/hadoop-aws-3.3.4.jar,/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar
+        /opt/spark/scripts/streaming/customer_kafka_to_raw.py
+    depends_on:
+      - kafka
+      - minio
+      - spark-master
+    networks:
+      - spark-net
+    restart: always
+  
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
@@ -198,3 +221,4 @@ volumes:
   postgres-db-volume:
   minio-data:
   trino-data:
+  spark-ivy-cache:
