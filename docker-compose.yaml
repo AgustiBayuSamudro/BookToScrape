@@ -91,6 +91,9 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
     networks:
       - spark-net
 
@@ -109,6 +112,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_HEAP_OPTS: "-Xms256M -Xmx512M"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     networks:
       - spark-net
 
@@ -132,6 +137,7 @@ services:
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
     environment:
       - SPARK_MODE=master
+      - SPARK_SUBMIT_PARAMETERS=--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.4
     ports:
       - "7077:7077"
       - "8081:8080"
@@ -149,6 +155,7 @@ services:
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     environment:
       - SPARK_MODE=worker
+      - SPARK_SUBMIT_PARAMETERS=--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.4
     depends_on:
       - spark-master
     networks:
@@ -166,13 +173,12 @@ services:
     environment:
       - SPARK_MODE=client
     volumes:
-      - /home/agusti/BookToScrape/scripts:/opt/spark/scripts
-      - spark-ivy-cache:/tmp/ivy_cache
+      - /home/agusti/BookToScrape/scripts:/opt/spark/scripts      
     command: >
       spark-submit
-        --master spark://spark-master:7077
-        --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.0.jar,/opt/spark/jars/kafka-clients-3.4.1.jar,/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.0.jar,/opt/spark/jars/hadoop-aws-3.3.4.jar,/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar
-        /opt/spark/scripts/streaming/customer_kafka_to_raw.py
+          --master spark://spark-master:7077
+          --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.hadoop:hadoop-aws:3.3.4
+          /opt/spark/scripts/streaming/customer_kafka_to_raw.py
     depends_on:
       - kafka
       - minio
@@ -220,5 +226,7 @@ networks:
 volumes:
   postgres-db-volume:
   minio-data:
-  trino-data:
-  spark-ivy-cache:
+  trino-data:  
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
