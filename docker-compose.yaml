@@ -218,6 +218,28 @@ services:
       - minio
     networks:
       - spark-net
+  
+  metabase:
+    image: metabase/metabase:v0.56.4
+    container_name: metabase
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+    ports:
+      - "8082:3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=db_bookmetabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=airflow
+      - MB_DB_PASS=airflow
+      - MB_DB_HOST=103.196.155.168
+      - JAVA_OPTS=-Xmx1g -Xms512m
+    networks:
+      - spark-net
+    restart: always
 
 networks:
   spark-net:
